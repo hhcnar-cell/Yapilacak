@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MUREX LTD – Apartman Operasyon</title>
+<style>
+:root{--n:#0f2a4a;--g:#1f9d55;--bg:#f1f4f8;--cd:#fff;--tx:#14213a;--mu:#6b7686;--ln:#dde3ea;--r:#d92d20}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1522;--cd:#15233a;--tx:#e8eef5;--mu:#93a1b5;--ln:#243550}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:480px;margin:auto;padding-bottom:150px}
+header{background:var(--n);color:#fff;padding:calc(14px + env(safe-area-inset-top,0px)) 18px 14px;font-weight:700;font-size:19px}
+header small{font-weight:400;opacity:.7;font-size:14px;margin-left:6px}
+main{padding:16px}h2{margin:4px 0 14px;font-size:22px}
+h3{margin:22px 0 10px;font-size:15px;color:var(--mu);font-weight:600}h3.r{color:var(--r)}
+.card{display:flex;align-items:center;gap:12px;background:var(--cd);border-left:5px solid var(--ln);border-radius:14px;padding:14px 16px;margin-bottom:12px;min-height:64px}
+.card.r{border-left-color:var(--r)}.card.g{border-left-color:var(--g)}
+.tx{flex:1;min-width:0}.tx b{display:block;font-size:18px;font-weight:600}.tx span{color:var(--mu);font-size:15px}.rd{color:var(--r)}
+.ok{flex:none;width:52px;height:52px;border-radius:50%;border:0;background:var(--g);color:#fff;font-size:26px}
+.bd{flex:none;min-width:30px;text-align:center;background:var(--n);color:#fff;border-radius:999px;padding:3px 10px;font-weight:700}.bd.r{background:var(--r)}
+input,select,textarea{width:100%;padding:14px;font-size:17px;border:1px solid var(--ln);border-radius:12px;background:var(--cd);color:var(--tx);font-family:inherit}
+textarea{min-height:80px}label{display:block;font-size:15px;color:var(--mu);margin:16px 0 6px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;background:var(--g);color:#fff;margin:10px 0}
+.btn.l{background:var(--cd);color:var(--tx);border:1px solid var(--ln)}.btn.d{background:var(--r)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid var(--ln);background:var(--cd);color:var(--tx);border-radius:999px;padding:11px 16px;font-size:16px}.chip.on{background:var(--n);color:#fff;border-color:var(--n)}
+.back{color:var(--g);font-weight:600;padding:4px 0 10px}.mut{color:var(--mu)}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--cd);border-top:1px solid var(--ln);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;color:var(--mu);padding:12px 0;font-size:16px;min-height:60px}nav button.on{color:var(--g);font-weight:700}
+.fab{position:fixed;right:max(18px,calc(50% - 222px));bottom:calc(78px + env(safe-area-inset-bottom,0px));height:60px;padding:0 24px;border-radius:30px;border:0;background:var(--g);color:#fff;font-size:18px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.sh{background:var(--bg);width:100%;max-width:480px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:8px 18px 30px}
+.pv img{max-width:100%;border-radius:10px;margin-top:8px}.pv a{color:var(--r);margin-left:8px}
+details summary{color:var(--g);font-weight:600;padding:14px 0}
+</style></head><body>
+<header>MUREX LTD <small>Apartman Operasyon</small></header>
+<main id="main"></main>
+<button class="fab" onclick="openForm()">+ İş ekle</button>
+<nav><button id="n0" onclick="tab(0)">Bugün</button><button id="n1" onclick="tab(1)">Apartmanlar</button></nav>
+<div id="sheet" onclick="if(event.target===this)closeS()"></div>
+<script>
+/* Veri katmanı: Firebase'e geçerken yalnızca DB değişir */
+const K='murex_basit_v1',$=s=>document.querySelector(s);
+const DB={load(){try{return JSON.parse(localStorage.getItem(K))}catch(e){return null}},save(d){try{localStorage.setItem(K,JSON.stringify(d))}catch(e){alert('Depolama dolu. Fotoğrafları azaltın.')}}};
+const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),today=()=>iso(new Date());
+const dd=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)},diff=d=>Math.round((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/864e5);
+const fd=d=>d?d.split('-').reverse().join('.'):'',uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lc=s=>String(s||'').toLocaleLowerCase('tr');
+const M={'Aylık':1,'3 aylık':3,'Yıllık':12};
+function nxt(d,t){const x=new Date(d+'T00:00:00');x.setMonth(x.getMonth()+M[t]);return iso(x)}
+function seed(){return{apts:[],isler:[]}}
+let S=DB.load()||seed(),D={},R={t:0,apt:null,q:'',all:false};const save=()=>DB.save(S),an=id=>(S.apts.find(a=>a.id===id)||{ad:'?'}).ad,open=()=>S.isler.filter(i=>!i.done).sort((p,q)=>(p.tarih||'9')<(q.tarih||'9')?-1:1);
+function when(i){if(i.done)return'Tamamlandı';const n=diff(i.tarih);return n<0?`<span class=rd>${-n} gün gecikti</span>`:n==0?'Bugün':n==1?'Yarın':fd(i.tarih)}
+function card(i){const c=i.done?'g':!i.done&&diff(i.tarih)<0?'r':'';
+return `<div class="card ${c}" onclick="openForm('${i.id}')"><div class=tx><b>${esc(i.b)}</b><span>${esc(an(i.a))} · ${when(i)}${i.tutar?' · '+Number(i.tutar).toLocaleString('tr-TR')+' TL':''}</span></div>${i.done?`<button class=ok style="background:var(--mu)" onclick="event.stopPropagation();reopen('${i.id}')">↩</button>`:`<button class=ok onclick="event.stopPropagation();finish('${i.id}')">✓</button>`}</div>`}
+function finish(id){const i=S.isler.find(x=>x.id===id);if(i.tekrar&&i.tekrar!=='Yok'){let d=i.tarih||today();do d=nxt(d,i.tekrar);while(diff(d)<0);i.tarih=d}else i.done=true;save();render()}
+function reopen(id){S.isler.find(x=>x.id===id).done=false;save();render()}
+function tab(t){R.t=t;R.apt=null;render();scrollTo(0,0)}
+function render(){$('#n0').className=R.t==0?'on':'';$('#n1').className=R.t==1?'on':'';R.t==0?home():R.apt?aptPage():apts()}
+/* BUGÜN */
+function home(){$('#main').innerHTML='<input id=s type=search placeholder="🔍 Ara (ör. hidrofor)" value="'+esc(R.q)+'" oninput="R.q=this.value;list()"><div id=L></div>';list()}
+function list(){if(!S.apts.length){$('#L').innerHTML='<div class=card><div class=tx><b>Önce apartman ekleyin</b><span>Apartmanlar bölümünden istediğiniz kadar ekleyebilirsiniz</span></div></div><button class=btn onclick="tab(1)">Apartman ekle</button>';return}let o=open(),h='';const q=lc(R.q.trim());
+if(q){o=o.filter(i=>lc(i.b+' '+an(i.a)+' '+i.not).includes(q));h=o.map(card).join('')||'<p class=mut>Bulunamadı</p>'}
+else{const G=[['Geciken',o.filter(i=>diff(i.tarih)<0),'r'],['Bugün',o.filter(i=>diff(i.tarih)==0)],['Bu hafta',o.filter(i=>diff(i.tarih)>0&&diff(i.tarih)<=7)]],L=o.filter(i=>diff(i.tarih)>7);
+G.forEach(([t,r,c])=>{if(r.length)h+=`<h3 class="${c||''}">${t}</h3>${r.map(card).join('')}`});
+if(!h)h='<div class=card><div class=tx><b>Bugün bekleyen iş yok ✓</b></div></div>';
+if(L.length)h+=R.all?`<h3>Daha sonra</h3>${L.map(card).join('')}`:`<button class="btn l" onclick="R.all=true;list()">Daha sonraki ${L.length} işi göster</button>`}
+$('#L').innerHTML=h}
+/* APARTMANLAR */
+function apts(){const o=open();$('#main').innerHTML='<h2>Apartmanlar</h2><button class=btn onclick="addApt()">+ Apartman ekle</button>'+(S.apts.length?S.apts.map(a=>{const m=o.filter(i=>i.a===a.id),g=m.some(i=>diff(i.tarih)<0);return `<div class=card onclick="R.apt='${a.id}';render();scrollTo(0,0)"><div class=tx><b>${esc(a.ad)}</b><span>${a.daire?a.daire+' daire':''}</span></div>${m.length?`<span class="bd ${g?'r':''}">${m.length}</span>`:''}</div>`}).join(''):'<p class=mut>Henüz apartman yok. Yukarıdan ekleyin.</p>')+'<button class="btn l" onclick="setup()">Düzenle / Sil / Yedek</button>'}
+function addApt(){sheet(`<h2 style="margin-top:18px">Yeni apartman</h2><label>Apartman adı</label><input id=na><label>Daire sayısı</label><input id=nd type=number inputmode=numeric><button class=btn onclick="saveApt()">Kaydet</button><button class="btn l" onclick="closeS()">Vazgeç</button>`);setTimeout(()=>$('#na').focus(),50)}
+function saveApt(){const n=$('#na').value.trim();if(!n)return alert('Apartman adını yazın');S.apts.push({id:uid(),ad:n,daire:+$('#nd').value||0,not:''});save();closeS();render()}
+function delApt(id){if(confirm('Apartman ve tüm işleri silinsin mi?')){S.apts=S.apts.filter(a=>a.id!==id);S.isler=S.isler.filter(i=>i.a!==id);save();setup()}}
+function aptPage(){const a=S.apts.find(x=>x.id===R.apt),all=S.isler.filter(i=>i.a===a.id),o=open().filter(i=>i.a===a.id),dn=all.filter(i=>i.done);
+$('#main').innerHTML=`<div class=back onclick="R.apt=null;render()">‹ Apartmanlar</div><h2>${esc(a.ad)}</h2><button class=btn onclick="openForm(null,'${a.id}')">+ İş ekle</button>${o.map(card).join('')||'<p class=mut>Açık iş yok ✓</p>'}<h3>Not</h3><textarea placeholder="Bu apartman için not..." oninput="a_.not=this.value;save()">${esc(a.not)}</textarea>${dn.length?`<details><summary>Tamamlananlar (${dn.length})</summary>${dn.map(card).join('')}</details>`:''}`;window.a_=a}
+/* FORM */
+function openForm(id,apt){if(!S.apts.length){alert('Önce Apartmanlar bölümünden bir apartman ekleyin');tab(1);return}const e=id?S.isler.find(x=>x.id===id):null;D=e?{...e}:{id:uid(),a:apt||R.apt||S.apts[0].id,b:'',tarih:today(),tekrar:'Yok',tutar:'',not:'',foto:'',done:false};
+const ch=(k,v)=>`<button type=button class="chip ${D[k]===v?'on':''}" onclick="chip('${k}','${v}',this)">${v}</button>`;
+const dc=(l,v)=>`<button type=button class="chip ${D.tarih===v?'on':''}" onclick="chip('tarih','${v}',this)">${l}</button>`;
+sheet(`<h2 style="margin-top:18px">${e?'İşi düzenle':'Yeni iş'}</h2><label>Apartman</label><select onchange="D.a=this.value">${S.apts.map(a=>`<option value="${a.id}" ${a.id===D.a?'selected':''}>${esc(a.ad)}</option>`).join('')}</select>
+<label>Ne yapılacak?</label><input id=bb value="${esc(D.b)}" oninput="D.b=this.value">
+${e?'':`<div class=chips style="margin-top:8px">${['Asansör','Hidrofor','Doğalgaz ödemesi','Elektrik ödemesi','Çatı','Temizlik'].map(t=>`<button type=button class=chip onclick="D.b='${t}';$('#bb').value='${t}'">${t}</button>`).join('')}</div>`}
+<label>Tarih</label><div class=chips>${dc('Bugün',today())}${dc('Yarın',dd(1))}${dc('1 hafta',dd(7))}</div><input id=dt type=date style="margin-top:8px" value="${D.tarih}" oninput="D.tarih=this.value">
+<label>Tekrar</label><div class=chips>${['Yok','Aylık','3 aylık','Yıllık'].map(v=>ch('tekrar',v)).join('')}</div>
+<details><summary>Tutar, not, fotoğraf</summary><label>Tutar (TL)</label><input type=number inputmode=decimal value="${esc(D.tutar)}" oninput="D.tutar=this.value"><label>Not</label><textarea oninput="D.not=this.value">${esc(D.not)}</textarea><label>Fotoğraf / PDF</label><input type=file accept="image/*,application/pdf" onchange="pick(this)"><div class=pv id=pv></div></details>
+<button class=btn onclick="saveF()">Kaydet</button>${e?'<button class="btn d" onclick="delF()">Sil</button>':''}<button class="btn l" onclick="closeS()">Vazgeç</button>`);prev()}
+function chip(k,v,el){D[k]=v;[...el.parentNode.children].forEach(c=>c.classList.toggle('on',c===el));if(k==='tarih')$('#dt').value=v}
+function saveF(){if(!D.b.trim())return alert('Ne yapılacağını yazın');if(!D.tarih)D.tarih=today();const i=S.isler.findIndex(x=>x.id===D.id);i<0?S.isler.push(D):S.isler[i]=D;save();closeS();render()}
+function delF(){if(confirm('Silinsin mi?')){S.isler=S.isler.filter(x=>x.id!==D.id);save();closeS();render()}}
+function pick(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{if(f.type.startsWith('image/')){const im=new Image();im.onload=()=>{const s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);D.foto=c.toDataURL('image/jpeg',.6);prev()};im.src=r.result}else{if(f.size>1.5e6)return alert('PDF en fazla 1,5 MB olmalı');D.foto=r.result;prev()}};r.readAsDataURL(f)}
+function prev(){const e=$('#pv');if(e)e.innerHTML=D.foto?(D.foto.startsWith('data:image')?`<img src="${D.foto}">`:'📄 Dosya ekli')+'<a onclick="D.foto=\'\';prev()">Kaldır</a>':''}
+/* AYARLAR / YEDEK */
+function setup(){sheet(`<h2 style="margin-top:18px">Apartmanlar</h2>${S.apts.map(a=>`<div style="display:flex;gap:8px;margin-bottom:8px"><input value="${esc(a.ad)}" onchange="ren('${a.id}','ad',this.value)"><input type=number style="width:80px" value="${a.daire}" onchange="ren('${a.id}','daire',+this.value)"><button class=chip onclick="delApt('${a.id}')">🗑</button></div>`).join('')}<p class=mut>Sol: ad · Sağ: daire sayısı</p><button class=btn onclick="exp()">Yedek al</button><label class="btn l" style="text-align:center">Yedekten yükle<input type=file accept=".json" hidden onchange="imp(this)"></label><button class="btn d" onclick="if(confirm('TÜM veriler silinsin mi?')){S={apts:[],isler:[]};save();closeS();render()}">Tüm verileri sil</button><button class="btn l" onclick="closeS();render()">Kapat</button>`)}
+function ren(id,k,v){S.apts.find(a=>a.id===id)[k]=v;save()}
+function exp(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='murex-yedek-'+today()+'.json';a.click()}
+function imp(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.apts||!d.isler)throw 0;S=d;save();closeS();render()}catch(e){alert('Geçersiz yedek dosyası')}};r.readAsText(f)}
+function sheet(h){const s=$('#sheet');s.innerHTML='<div class=sh>'+h+'</div>';s.style.display='flex'}
+function closeS(){$('#sheet').style.display='none'}
+render();
+</script></body></html>
